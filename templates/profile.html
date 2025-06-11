@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Левая колонка - профиль -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" 
+                         class="rounded-circle mb-3" width="150" height="150" alt="Аватар">
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="avatar" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Обновить фото</button>
+                    </form>
+                    
+                    <h3 class="mt-3">{{ current_user.username }}</h3>
+                    {% if current_user.is_admin %}
+                        <div class="badge bg-warning text-dark mb-2">Администратор</div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <input type="text" class="form-control text-center" name="status" value="{{ current_user.status }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary mb-3">Обновить статус</button>
+                        
+                        <div class="mb-3">
+                            <label for="birth_date" class="form-label">Дата рождения</label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                                   value="{{ current_user.birth_date.strftime('%Y-%m-%d') if current_user.birth_date else '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Сохранить дату</button>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <p><strong>Был в сети:</strong> {{ current_user.last_online.strftime('%d.%m.%Y %H:%M') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правая колонка - действия и друзья -->
+        <div class="col-md-8">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="actions-tab" data-bs-toggle="tab" 
+                            data-bs-target="#actions" type="button" role="tab">История действий</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="friends-tab" data-bs-toggle="tab" 
+                            data-bs-target="#friends" type="button" role="tab">Мои друзья</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="myTabContent">
+                <!-- Вкладка История действий -->
+                <div class="tab-pane fade show active" id="actions" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Мои действия</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" name="action_content" placeholder="Что у вас нового?">
+                                    <button class="btn btn-primary" type="submit">Создать</button>
+                                </div>
+                            </form>
+                            
+                            <div class="list-group mt-3">
+                                {% for action in actions %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <small class="text-muted">{{ action.date_posted.strftime('%d.%m.%Y %H:%M') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ action.content }}</p>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Пока нет действий
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Отметки в действиях</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Стандартные действия</h6>
+                            <div class="list-group">
+                                {% for mark in daily_marks %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <a href="{{ url_for('daily_action_stats', action_id=mark.action.id) }}">
+                                                {{ mark.action.content }}
+                                            </a>
+                                            <small class="text-muted">({{ mark.timestamp.strftime('%d.%m.%Y %H:%M') }})</small>
+                                        </div>
+                                        <span class="badge bg-primary">
+                                            {{ mark.action.count }} за минуту
+                                        </span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Нет отметок в стандартных действиях
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <h6 class="mt-3">Созданные действия</h6>
+                            <div class="list-group">
+                                {% for mark in custom_marks %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <a href="{{ url_for('custom_action_stats', action_id=mark.action.id) }}">
+                                                {{ mark.action.content }}
+                                            </a>
+                                            <small class="text-muted">({{ mark.timestamp.strftime('%d.%m.%Y %H:%M') }})</small>
+                                        </div>
+                                        <span class="badge bg-info">
+                                            {{ mark.action.count }} за 10 мин
+                                        </span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Нет отметок в созданных действиях
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Созданные мной действия</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for action in created_actions %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ url_for('custom_action_stats', action_id=action.id) }}">
+                                                {{ action.content }}
+                                            </a>
+                                            <small class="text-muted">({{ action.date_posted.strftime('%d.%m.%Y %H:%M') }})</small>
+                                        </div>
+                                        <span class="badge bg-success">
+                                            {{ action.count }} отметок
+                                        </span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Вы еще не создавали действий
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка Мои друзья -->
+                <div class="tab-pane fade" id="friends" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>В друзьях</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for friend in current_user.get_friends() %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='uploads/' + friend.avatar) }}" 
+                                             class="rounded-circle me-3" width="40" height="40" alt="Аватар">
+                                        <div>
+                                            <a href="{{ url_for('view_user', user_id=friend.id) }}">
+                                                {{ friend.username }}
+                                            </a>
+                                            <div class="text-muted small">{{ friend.status }}</div>
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('remove_friend', friend_id=friend.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    У вас пока нет друзей
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Рекомендуемые</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for user in current_user.get_recommended_friends() %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" 
+                                             class="rounded-circle me-3" width="40" height="40" alt="Аватар">
+                                        <div>
+                                            <a href="{{ url_for('view_user', user_id=user.id) }}">
+                                                {{ user.username }}
+                                            </a>
+                                            <div class="text-muted small">{{ user.status }}</div>
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('add_friend', friend_id=user.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-primary">Добавить</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Нет рекомендованных пользователей
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Запросы в друзья</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for request in current_user.get_pending_requests() %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='uploads/' + request.sender.avatar) }}" 
+                                             class="rounded-circle me-3" width="40" height="40" alt="Аватар">
+                                        <div>
+                                            <a href="{{ url_for('view_user', user_id=request.sender.id) }}">
+                                                {{ request.sender.username }}
+                                            </a>
+                                            <div class="text-muted small">{{ request.sender.status }}</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <form method="POST" action="{{ url_for('accept_friend', request_id=request.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success me-1">Принять</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('decline_friend', request_id=request.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Отклонить</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-muted py-3">
+                                    Нет входящих запросов
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Инициализация табов
+    var triggerTabList = [].slice.call(document.querySelectorAll('#myTab button'))
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+});
+</script>
+{% endblock %}

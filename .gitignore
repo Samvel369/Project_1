@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+.venv/
+venv/
+
+# Database
+instance/site.db
+
+# Environment variables
+.env
+
+# Uploads
+static/uploads/*
+!static/uploads/default.jpg
+
+# OS
+.DS_Store
+Thumbs.db
