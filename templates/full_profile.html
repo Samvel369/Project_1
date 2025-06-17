@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Левая колонка - профиль -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" 
+                         class="rounded-circle mb-3" width="150" height="150" alt="Аватар">
+                    
+                    <h3>{{ user.username }}</h3>
+                    {% if user.is_admin %}
+                        <div class="badge bg-warning text-dark mb-2">Администратор</div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <p class="lead">{{ user.status }}</p>
+                    </div>
+                    
+                    {% if user.birth_date %}
+                    <div class="mb-3">
+                        <p><strong>Дата рождения:</strong> {{ user.birth_date.strftime('%d.%m.%Y') }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Был в сети:</strong> {{ user.last_online.strftime('%d.%m.%Y %H:%M') }}</p>
+                    </div>
+                    
+                    {% if is_friend %}
+                    <form method="POST" action="{{ url_for('remove_friend', friend_id=user.id) }}">
+                        <button type="submit" class="btn btn-outline-danger mt-2">Удалить из друзей</button>
+                    </form>
+                    {% elif user != current_user %}
+                    <form method="POST" action="{{ url_for('add_friend', friend_id=user.id) }}">
+                        <button type="submit" class="btn btn-primary mt-2">Добавить в друзья</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правая колонка - действия -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Действия пользователя</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group mt-3">
+                        {% for action in actions %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <small class="text-muted">{{ action.date_posted.strftime('%d.%m.%Y %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">{{ action.content }}</p>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            Пока нет действий
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>Созданные действия</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for action in created_actions %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{{ url_for('custom_action_stats', action_id=action.id) }}">
+                                        {{ action.content }}
+                                    </a>
+                                    <small class="text-muted">({{ action.date_posted.strftime('%d.%m.%Y %H:%M') }})</small>
+                                </div>
+                                <span class="badge bg-success">
+                                    {{ action.count }} отметок
+                                </span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            Пользователь еще не создавал действий
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Наш мир</h2>
+    
+    <div class="alert alert-info">
+        <strong>Таймер сброса:</strong> 
+        <span id="reset-timer">{{ reset_interval }}</span> сек
+    </div>
+    
+    <div class="row">
+        <!-- Колонка "Ежедневные действия" -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5>Ежедневные действия</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.is_admin %}
+                    <div class="mb-3">
+                        <form method="POST" action="{{ url_for('add_standard_action') }}">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="new_action" placeholder="Новое действие">
+                                <button class="btn btn-success" type="submit">Добавить</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Поиск по ежедневным действиям -->
+                    <div class="mb-3">
+                        <input type="text" class="form-control search-input" 
+                               placeholder="Поиск действий..." data-target="daily-actions">
+                    </div>
+                    
+                    <div class="list-group" id="daily-actions">
+                        {% for action in standard_actions %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ url_for('daily_action_stats', action_id=action.id) }}">
+                                    {{ action.content }}
+                                </a>
+                                <span class="badge bg-secondary ms-2 mark-count" 
+                                      id="daily-count-{{ action.id }}">
+                                    {{ action.count }}
+                                </span>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-sm btn-outline-primary mark-daily me-2" 
+                                        data-action-id="{{ action.id }}">
+                                    Отметиться
+                                </button>
+                                {% if current_user.is_admin %}
+                                <form method="POST" action="{{ url_for('delete_standard_action', action_id=action.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">×</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Колонка "Созданные действия" -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5>Созданные действия</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Поиск по созданным действиям -->
+                    <div class="mb-3">
+                        <input type="text" class="form-control search-input" 
+                               placeholder="Поиск действий..." data-target="custom-actions">
+                    </div>
+                    
+                    <div class="list-group" id="custom-actions">
+                        {% for action in custom_actions %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ url_for('custom_action_stats', action_id=action.id) }}">
+                                    {{ action.content }}
+                                </a>
+                                <small class="d-block text-muted">@{{ action.author.username }}</small>
+                                <span class="badge bg-secondary mark-count" 
+                                      id="custom-count-{{ action.id }}">
+                                    {{ action.count }}
+                                </span>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-sm btn-outline-primary mark-custom me-2" 
+                                        data-action-id="{{ action.id }}">
+                                    Отметиться
+                                </button>
+                                {% if current_user.is_admin or action.user_id == current_user.id %}
+                                <form method="POST" action="{{ url_for('delete_custom_action', action_id=action.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">×</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            Пока нет созданных действий
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Колонка "Мои действия" -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5>Мои действия</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_personal_action') }}">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" name="action_content" placeholder="Что вы делаете?">
+                            <button class="btn btn-success" type="submit">Добавить</button>
+                        </div>
+                    </form>
+                    
+                    <div class="list-group mt-3" id="personal-actions">
+                        {% for action in my_actions %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>{{ action.content }}</div>
+                            <div>
+                                <form method="POST" action="{{ url_for('publish_action', action_id=action.id) }}" class="d-inline">
+                                    <button class="btn btn-sm btn-primary me-1" type="submit">Опубликовать</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('delete_personal_action', action_id=action.id) }}" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">×</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            У вас пока нет действий
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Функция для форматирования времени
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins} мин ${secs} сек`;
+    }
+
+    // Функция для поиска действий
+    function filterActions(searchTerm, target) {
+        const $container = $('#' + target);
+        if (!searchTerm) {
+            // Показать все элементы, если поиск пустой
+            $container.find('.list-group-item').show();
+            return;
+        }
+        
+        // Искать по тексту действий
+        const searchLower = searchTerm.toLowerCase();
+        $container.find('.list-group-item').each(function() {
+            const $item = $(this);
+            const text = $item.text().toLowerCase();
+            if (text.includes(searchLower)) {
+                $item.show();
+            } else {
+                $item.hide();
+            }
+        });
+    }
+    
+    // Обработчики поиска
+    $('.search-input').on('input', function() {
+        const searchTerm = $(this).val().trim();
+        const target = $(this).data('target');
+        filterActions(searchTerm, target);
+    });
+
+    // Отметка в стандартных действиях
+    $('.mark-daily').click(function() {
+        const actionId = $(this).data('action-id');
+        const countElement = $('#daily-count-' + actionId);
+        const button = $(this);
+        
+        // Блокируем кнопку на 1 секунду для предотвращения спама
+        button.prop('disabled', true);
+        setTimeout(() => button.prop('disabled', false), 1000);
+        
+        $.post("{{ url_for('mark_daily_action', action_id=0) }}".replace('0', actionId), function(data) {
+            if (data.error) {
+                alert(data.message);
+            } else if (data.success) {
+                countElement.text(data.count);
+                
+                // Для обычных пользователей блокируем кнопку на 10 минут
+                {% if not current_user.is_admin %}
+                button.prop('disabled', true);
+                let cooldown = 600;
+                
+                const timer = setInterval(() => {
+                    cooldown--;
+                    button.text(`Ждите ${formatTime(cooldown)}`);
+                    
+                    if (cooldown <= 0) {
+                        clearInterval(timer);
+                        button.prop('disabled', false);
+                        button.text('Отметиться');
+                    }
+                }, 1000);
+                {% endif %}
+            }
+        });
+    });
+    
+    // Отметка в созданных действиях
+    $('.mark-custom').click(function() {
+        const actionId = $(this).data('action-id');
+        const countElement = $('#custom-count-' + actionId);
+        const button = $(this);
+        
+        // Блокируем кнопку на 1 секунду
+        button.prop('disabled', true);
+        setTimeout(() => button.prop('disabled', false), 1000);
+        
+        $.post("{{ url_for('mark_custom_action', action_id=0) }}".replace('0', actionId), function(data) {
+            if (data.error) {
+                alert(data.message);
+            } else if (data.success) {
+                countElement.text(data.count);
+                
+                // Для обычных пользователей блокируем кнопку на 10 минут
+                {% if not current_user.is_admin %}
+                button.prop('disabled', true);
+                let cooldown = 600;
+                
+                const timer = setInterval(() => {
+                    cooldown--;
+                    button.text(`Ждите ${formatTime(cooldown)}`);
+                    
+                    if (cooldown <= 0) {
+                        clearInterval(timer);
+                        button.prop('disabled', false);
+                        button.text('Отметиться');
+                    }
+                }, 1000);
+                {% endif %}
+            }
+        });
+    });
+    
+    // Функция для обновления счетчиков
+    function updateCounters() {
+        $.get("{{ url_for('get_action_counts') }}", function(data) {
+            // Обновляем счетчики стандартных действий
+            for (const [id, count] of Object.entries(data.standard_actions)) {
+                $('#daily-count-' + id).text(count);
+            }
+            
+            // Обновляем счетчики пользовательских действий
+            for (const [id, count] of Object.entries(data.custom_actions)) {
+                $('#custom-count-' + id).text(count);
+            }
+        });
+    }
+    
+    // Обновление счетчиков каждые 5 секунд
+    setInterval(updateCounters, 5000);
+    
+    // Таймер сброса
+    let resetSeconds = {{ reset_interval }};
+    const resetTimer = $('#reset-timer');
+    
+    function updateResetTimer() {
+        resetSeconds--;
+        if (resetSeconds < 0) {
+            resetSeconds = {{ reset_interval }};
+        }
+        resetTimer.text(resetSeconds);
+    }
+    
+    // Обновляем таймер каждую секунду
+    setInterval(updateResetTimer, 1000);
+    
+    // Обновление счетчиков онлайн пользователей
+    function updateOnlineCounters() {
+        $.get("{{ url_for('our_world') }}", function(data) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'text/html');
+            
+            // Обновляем счетчики онлайн пользователей
+            $('#online-count').text($(doc).find('#online-count').text());
+            $('#total-count').text($(doc).find('#total-count').text());
+        });
+    }
+    
+    // Обновляем счетчики каждые 30 секунд
+    setInterval(updateOnlineCounters, 30000);
+});
+</script>
+{% endblock %}
