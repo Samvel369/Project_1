@@ -1209,7 +1209,7 @@ if __name__ == '__main__':
         cleanup_thread = Thread(target=cleanup_custom_actions, daemon=True)
         cleanup_thread.start()
     
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
 from config import Config
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -2417,4 +2417,4 @@ if __name__ == '__main__':
         cleanup_thread = Thread(target=cleanup_custom_actions, daemon=True)
         cleanup_thread.start()
     
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
