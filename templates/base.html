@@ -26,14 +26,12 @@
             <div class="col-md-2 bg-light sidebar">
                 <div class="position-sticky">
                     <ul class="nav flex-column">
-                        {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('profile') }}">Профиль</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('our_world') }}">Наш мир</a>
                         </li>
-                        {% endif %}
                         {% if current_user.is_authenticated %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('logout') }}">Выйти</a>
