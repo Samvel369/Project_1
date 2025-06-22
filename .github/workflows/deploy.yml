@@ -1,4 +1,4 @@
-name: Развертывание приложения Flask на сервере
+name: 🚀 Deploy Flask App to Server
 
 on:
   push:
@@ -10,15 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Получение кода из GitHub
+      - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      - name: Подключение к серверу по SSH и деплой
+      - name: 🔐 Connect to server and deploy
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
+          host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
           script: |
             cd ~/Project_1
             git pull origin main
@@ -26,4 +27,3 @@ jobs:
             sudo systemctl restart social_network
             docker-compose down
             docker-compose up --build -d
-
