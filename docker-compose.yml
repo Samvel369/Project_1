@@ -4,20 +4,32 @@ services:
   web:
     build: .
     container_name: flask_app
-    ports:
-      - "5000:5000"  # только для теста, в продакшне не нужно
+    restart: always
     environment:
       - FLASK_ENV=production
       - DATABASE_URL=postgresql://samlion:Sam369333693@db:5432/social_network
+      - SECRET_KEY=your-secret-key-here
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
     networks:
       - backend
 
   db:
     image: postgres:15
+    container_name: postgres_db
+    restart: always
     environment:
       POSTGRES_USER: samlion
       POSTGRES_PASSWORD: Sam369333693
       POSTGRES_DB: social_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samlion -d social_network"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -25,6 +37,8 @@ services:
 
   nginx:
     image: nginx:alpine
+    container_name: nginx
+    restart: always
     ports:
       - "80:80"
     volumes:
@@ -34,8 +48,9 @@ services:
     networks:
       - backend
 
-networks:
-  backend:
-
 volumes:
   postgres_data:
+
+networks:
+  backend:
+    driver: bridge

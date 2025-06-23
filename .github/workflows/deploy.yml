@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Обновлено до последней версии
 
       - name: 🔐 Connect to server and deploy
         uses: appleboy/ssh-action@master
@@ -19,11 +19,41 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
+          port: ${{ secrets.SSH_PORT || 22 }}  # Добавлена возможность кастомного порта
           script: |
-            cd ~/Project_1
+            set -e  # Выход при ошибке любой команды
+            
+            echo "🔄 Updating project..."
+            cd ~/Project_1 || exit 1
+            
+            # Проверяем изменения в git
+            git fetch origin
+            if [ $(git rev-parse HEAD) = $(git rev-parse origin/main) ]; then
+              echo "✅ No new changes to deploy"
+              exit 0
+            fi
+            
+            echo "⬇️ Pulling latest changes..."
             git pull origin main
+            
+            # Проверяем существование venv
+            if [ ! -d "venv" ]; then
+              echo "🐍 Creating virtual environment..."
+              python3 -m venv venv
+            fi
+            
+            echo "🔧 Activating venv and installing dependencies..."
             source venv/bin/activate
-            docker-compose down
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            
+            echo "🐳 Rebuilding containers..."
+            docker-compose down --remove-orphans
             docker-compose build --no-cache
             docker-compose up -d
+            
+            echo "🛠️ Running migrations (если нужно)..."
+            docker-compose exec web flask db upgrade  # Уберите, если миграций нет
+            
+            echo "🚀 Deployment successful!"
+            docker-compose ps
