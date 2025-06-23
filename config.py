@@ -7,7 +7,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "fallback-jwt")
     
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///instance/site.db")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "postgresql://postgres:password@postgres_db:5432/postgres")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
