@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from collections import defaultdict
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
-from models import User
+from models import db, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -1231,7 +1231,6 @@ from models import db, User
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
