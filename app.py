@@ -23,7 +23,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret')
 app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
