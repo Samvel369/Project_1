@@ -1,18 +1,16 @@
 import os
 from dotenv import load_dotenv
 
+# Загружаем переменные окружения из файла .env (если он есть)
 load_dotenv()
 
-class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "fallback-jwt")
-    
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///instance/site.db")
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+# Получаем строку подключения из переменной окружения или используем значение по умолчанию
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:password@postgres_db:5432/postgres"
+)
 
-    DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
-    
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    RESET_INTERVAL = 86400  # 24 часа
-    COOLDOWN_INTERVAL = 60  # 60 секунд
+# Секретный ключ для сессий и безопасности (можно заменить на свой)
+SECRET_KEY = os.getenv("SECRET_KEY", "devkey")
