@@ -1,16 +1,20 @@
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из файла .env (если он есть)
+# Загружаем переменные окружения из .env
 load_dotenv()
 
-# Получаем строку подключения из переменной окружения или используем значение по умолчанию
-SQLALCHEMY_DATABASE_URI = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:password@postgres_db:5432/postgres"
-)
+class Config:
+    # База данных: сначала из переменной окружения, иначе — дефолтная строка
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:password@postgres_db:5432/postgres"
+    )
 
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Секретный ключ для сессий и безопасности (можно заменить на свой)
-SECRET_KEY = os.getenv("SECRET_KEY", "devkey")
+    # Секретный ключ
+    SECRET_KEY = os.getenv("SECRET_KEY", "devkey")
+
+    # Режим отладки
+    DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
