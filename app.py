@@ -1,19 +1,38 @@
-from flask import Flask, render_template
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import db, User
+from flask_migrate import Migrate
+from flask_login import LoginManager
+from flask_bcrypt import Bcrypt
+from flask_cors import CORS
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
 import os
 
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://samlion:Sam369333693@db:5432/social_network')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object('config.Config')
 
-db.init_app(app)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+bcrypt = Bcrypt(app)
+CORS(app)
 
-@app.route("/")
+from models import User  # Модель пользователя
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.context_processor
+def inject_counts():
+    online_threshold = datetime.utcnow() - timedelta(minutes=5)
+    online_users_count = User.query.filter(User.last_online >= online_threshold).count()
+    return dict(online_users_count=online_users_count)
+
+@app.route('/')
 def index():
-    return "Сайт работает!"
-
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, host="0.0.0.0")
+    return render_template('index.html')
